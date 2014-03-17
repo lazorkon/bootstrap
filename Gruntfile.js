@@ -381,5 +381,53 @@ module.exports = function(grunt) {
     });
   });
 
+  grunt.registerTask('saparate', 'create custom build of separate modules', function() {
+    var _ = grunt.util._;
+
+    //If arguments define what modules to build, build those. Else, everything
+    if (this.args.length) {
+      this.args.forEach(findModule);
+      grunt.config('filename', grunt.config('filenamecustom'));
+    } else {
+      grunt.file.expand({
+        filter: 'isDirectory', cwd: '.'
+      }, 'src/*').forEach(function(dir) {
+        findModule(dir.split('/')[1]);
+      });
+    }
+
+    var modules = grunt.config('modules');
+
+    var path = require('path');
+
+    var dist = grunt.config('dist') + '/custom';
+    var banner = grunt.config('meta.banner');
+    modules.forEach(function (module) {
+      var moduleDefinition = 'angular.module(' + module.moduleName + ', ['
+          + module.dependencies.map(function (name) { return '"ui.bootstrap.' + name + '"'; }).concat(module.tplModules).join(', ')
+          + '])';
+
+      var parts = [];
+
+      parts.push(banner);      
+
+      module.srcFiles.forEach(function (filename) {
+        var src = grunt.file.read(filename);
+        src = src.replace(/angular\.module\(\s*['"]([^'"]+)['"]\s*,\s*\[[^\]]*?\]\s*\)/, moduleDefinition);
+        parts.push(src);
+      });
+
+      module.tpljsFiles.forEach(function (filename) {
+        var src = grunt.file.read(filename);
+        parts.push(src);
+      });
+
+      var out = dist + '/' + path.basename(path.dirname(module.srcFiles[0])) + '/' + path.basename(module.srcFiles[0]);
+      grunt.file.write(out, parts.join('\n'));
+      grunt.log.ok(module.moduleName);
+    });
+
+  });
+
   return grunt;
 };
