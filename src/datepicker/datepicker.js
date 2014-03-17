@@ -39,7 +39,7 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.position'])
     }
   });
 
-  $scope.datepickerMode = $scope.datepickerMode || datepickerConfig.datepickerMode;
+  $scope.datepickerMode = $scope.datepickerMode || (angular.isDefined($attrs['datepickerMode']) ? $interpolate($attrs['datepickerMode'])($scope.$parent) : datepickerConfig.datepickerMode);
   this.currentCalendarDate = angular.isDefined($attrs.initDate) ? $scope.$parent.$eval($attrs.initDate) : new Date();
 
   this.init = function( ngModelCtrl_ ) {
